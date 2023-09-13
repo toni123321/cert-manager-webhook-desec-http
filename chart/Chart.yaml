@@ -6,7 +6,7 @@ description: Allow cert-manager to solve DNS challenges using deSEC's public API
 version: 0.0.0-template
 appVersion: 0.0.0-template
 
-icon: https://domains.google/static/images/logo/new_logo.svg
+icon: https://desec.io/favicon.svg
 home: https://ghcr.io/irreleph4nt/charts
 
 sources:
