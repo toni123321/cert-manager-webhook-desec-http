@@ -1,0 +1,24 @@
+apiVersion: v2
+type: application
+name: cert-manager-webhook-desec-http
+description: Allow cert-manager to solve DNS challenges using deSEC's public API and HTTP requests
+
+version: 0.0.0-template
+appVersion: 0.0.0-template
+
+icon: https://domains.google/static/images/logo/new_logo.svg
+home: https://ghcr.io/irreleph4nt/charts
+
+sources:
+- https://github.com/irreleph4nt/cert-manager-webhook-desec-http
+
+keywords:
+- cert-manager
+- desec
+- webhook
+- tls
+- dns
+- api
+
+maintainers:
+- name: irreleph4nt
