@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
-	"github.com/cert-manager/cert-manager/test/acme/dns"
+	"github.com/cert-manager/cert-manager/test/acme"
 )
 
 var (
@@ -34,7 +35,8 @@ type SecretYaml struct {
 }
 
 func TestRunsSuite(t *testing.T) {
-	slogger := zapLogger.Sugar()
+	logger := zap.Must(zap.NewDevelopment())
+	slogger := logger.Sugar()
 
 	secretYaml := SecretYaml{}
 	secretYaml.ApiVersion = "v1"

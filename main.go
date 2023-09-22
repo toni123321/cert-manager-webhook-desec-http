@@ -15,7 +15,10 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
 	"github.com/cert-manager/cert-manager/pkg/issuer/acme/dns/util"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -23,7 +26,8 @@ import (
 )
 
 var GroupName = os.Getenv("GROUP_NAME")
-var zapLogger, _ = zap.NewProduction()
+var logger = zap.Must(zap.NewProduction())
+var zapLogger = zapr.NewLogger(logger)
 
 func main() {
 	if GroupName == "" {
@@ -65,7 +69,9 @@ func (c *desechttpDNSProviderSolver) Name() string {
 }
 
 func (c *desechttpDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
+
 	slogger.Infof("call function Present: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	config, err := clientConfig(c, ch)
@@ -79,7 +85,9 @@ func (c *desechttpDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) erro
 }
 
 func (c *desechttpDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
+
 	slogger.Infof("call function CleanUp: namespace=%s, zone=%s, fqdn=%s", ch.ResourceNamespace, ch.ResolvedZone, ch.ResolvedFQDN)
 
 	config, err := clientConfig(c, ch)
@@ -93,7 +101,8 @@ func (c *desechttpDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) erro
 }
 
 func (c *desechttpDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
 
 	k8sClient, err := kubernetes.NewForConfig(kubeClientConfig)
 	slogger.Infof("Input variable stopCh is %d length", len(stopCh))
@@ -124,7 +133,8 @@ func addTxtRecord(config Config, ch *v1alpha1.ChallengeRequest) {
 	var httpMethod string
 	var records *RRSet
 
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
 
 	// Get the subdomain portion of fqdn
 	fqdn := util.UnFqdn(ch.ResolvedFQDN)
@@ -200,7 +210,8 @@ func removeTxtRecord(config Config, ch *v1alpha1.ChallengeRequest) {
 	var httpMethod string
 	var records *RRSet
 
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
 
 	// Get the subdomain portion of fqdn
 	fqdn := util.UnFqdn(ch.ResolvedFQDN)
@@ -333,7 +344,8 @@ func clientConfig(c *desechttpDNSProviderSolver, ch *v1alpha1.ChallengeRequest) 
 
 // REST Request ------------------------------------------------------
 func callDnsApi(url string, method string, body io.Reader, config Config) ([]byte, int, error) {
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
 
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -343,10 +355,21 @@ func callDnsApi(url string, method string, body io.Reader, config Config) ([]byt
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Token "+config.ApiKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	retryReq, err := retryablehttp.FromRequest(req)
 	if err != nil {
-		return nil, -1, err
+		slogger.Fatal(err)
+	}
+
+	client := retryablehttp.NewClient()
+	client.Backoff = retryablehttp.LinearJitterBackoff
+	client.RetryWaitMin = 1200 * time.Millisecond
+	client.RetryWaitMax = 3000 * time.Millisecond
+	client.RetryMax = 5
+	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
+
+	resp, err := client.Do(retryReq)
+	if err != nil {
+		slogger.Fatal(err)
 	}
 
 	defer func() {
@@ -376,8 +399,8 @@ func callDnsApi(url string, method string, body io.Reader, config Config) ([]byt
 }
 
 func getTxtRecords(config Config, ch *v1alpha1.ChallengeRequest) (*RRSet, error) {
-	
-	slogger := zapLogger.Sugar()
+	logf.SetLogger(zapLogger)
+	slogger := logger.Sugar()
 
 	// Get the subdomain portion of fqdn
 	fqdn := util.UnFqdn(ch.ResolvedFQDN)
