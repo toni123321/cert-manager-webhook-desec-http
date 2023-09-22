@@ -12,7 +12,7 @@ export TEST_ASSET_KUBECTL=_test/kubebuilder/kubectl
 
 REGISTRY = ghcr.io
 IMAGE_NAME = irreleph4nt/cert-manager-webhook-desec-http
-IMAGE_TAG  = 1.0.0
+IMAGE_TAG  = 1.0.1
 
 
 ##@ Help
