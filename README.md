@@ -11,6 +11,13 @@ Testing:
 TEST_DOMAIN_NAME=<domain name> TEST_SECRET=$(echo -n '<DESEC API TOKEN>' | base64) make test
 ```
 
+# Version History
+| desec-http    | built with          | notable features         |
+| ------------- | ------------------- | ------------------------ |
+| v1.0.1        | cert-manager v1.13  | deSEC API Rate limiting  |
+|               |                     | logf.SetLogger(...) fix  |
+| v1.0.0        | cert-manager v1.11  | initial release          |
+
 # Example Issuer
 ```yaml
 apiVersion: cert-manager.io/v1
