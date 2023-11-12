@@ -3,7 +3,7 @@
 # ACME webhook for deSEC DNS API (http client version)
 Usage:
 ```bash
-helm install desec-http oci://ghcr.io/irreleph4nt/cert-manager-webhook-desec-http -f values.yaml -n cert-manager
+helm install desec-http oci://ghcr.io/irreleph4nt/charts/cert-manager-webhook-desec-http -f values.yaml -n cert-manager
 ```
 
 Testing:
