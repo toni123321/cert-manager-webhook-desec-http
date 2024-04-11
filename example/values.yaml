@@ -1,0 +1,42 @@
+# Change with your domaiin for consistency, can be anything as long as it is consistent with the usage in other files
+groupName: example.com 
+
+certManager:
+  serviceAccountName: cert-manager
+  namespace: cert-manager
+
+image:
+  repository: ghcr.io/irreleph4nt/cert-manager-webhook-desec-http
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 443
+
+secretName:
+# Change with your secret name (find it in secret-desec.yaml)
+- desec-api-key-secret
+
+resources:
+  limits:
+     cpu: 250m
+     memory: 256Mi
+  requests:
+     cpu: 250m
+     memory: 256Mi
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true

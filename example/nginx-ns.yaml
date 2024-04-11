@@ -1,0 +1,6 @@
+# Create namespace for nginx-test
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx1
+

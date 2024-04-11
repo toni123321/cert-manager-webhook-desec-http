@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nginx1
+  namespace: nginx1
+spec:
+  secretName: nginx1
+  issuerRef:
+    name: acme-issuer-prod
+    kind: ClusterIssuer
+  dnsNames:
+  # Change with your host name
+  - "nginx1.example.com"
